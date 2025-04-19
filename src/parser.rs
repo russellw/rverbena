@@ -861,14 +861,14 @@ impl Parser {
         // Else
         let mut no = Vec::<Stmt>::new();
         match self.tok {
+            Tok::Elif => {
+                no.push(self.if1());
+            }
             Tok::Else => {
                 self.lex();
                 self.require(Tok::Newline, "newline");
                 self.block(&mut no);
                 self.require(Tok::End, "'end'");
-            }
-            Tok::Elif => {
-                no.push(self.if1());
             }
             _ => {
                 self.require(Tok::End, "'end'");
