@@ -886,6 +886,12 @@ impl Parser {
     fn stmt(&mut self, v: &mut Vec<Stmt>) {
         let src = self.src();
         let r = match self.tok {
+            Tok::Import => {
+                self.lex();
+                let name = self.id();
+                self.importing.push(name);
+                return;
+            }
             Tok::Func => {
                 self.lex();
 
