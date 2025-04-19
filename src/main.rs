@@ -20,6 +20,6 @@ fn main() {
         .get_matches();
     let file = matches.get_one::<String>("file").unwrap();
     let output = matches.get_one::<String>("output").unwrap();
-    let ast = parse(file);
-    compile(&ast, output);
+    let program = parse(file);
+    compile(&program, output);
 }

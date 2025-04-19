@@ -43,3 +43,8 @@ pub enum Stmt {
     Try(Src, Vec<Stmt>, String, Vec<Stmt>),
     While(Src, Expr, Vec<Stmt>),
 }
+
+pub struct Program {
+    pub imports: Vec<(String, Vec<Stmt>)>,
+    pub main: Vec<Stmt>,
+}

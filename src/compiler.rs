@@ -369,7 +369,7 @@ impl<'a> Compiler<'a> {
     }
 }
 
-pub fn compile(ast: &Vec<Stmt>, file: &str) {
+pub fn compile(program: &Program, file: &str) {
     let mut out = match File::create(file) {
         Ok(a) => a,
         Err(e) => {
@@ -379,5 +379,9 @@ pub fn compile(ast: &Vec<Stmt>, file: &str) {
     };
     emit(&mut out, PREFIX_JS_BYTES);
     let mut compiler = Compiler::new(&mut out, true);
-    compiler.compile(Vec::<String>::new(), HashSet::<String>::new(), ast);
+    compiler.compile(
+        Vec::<String>::new(),
+        HashSet::<String>::new(),
+        &program.main,
+    );
 }
