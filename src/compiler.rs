@@ -20,13 +20,15 @@ fn emit(out: &mut File, b: &[u8]) {
 struct Compiler<'a> {
     assigned: HashSet<String>,
     out: &'a mut File,
+    is_top_level: bool,
 }
 
 impl<'a> Compiler<'a> {
-    fn new(out: &'a mut File) -> Self {
+    fn new(out: &'a mut File, is_top_level: bool) -> Self {
         Compiler {
             assigned: HashSet::<String>::new(),
             out,
+            is_top_level,
         }
     }
 
@@ -260,7 +262,7 @@ impl<'a> Compiler<'a> {
                 self.emit("}\n");
             }
             Stmt::Expr(_src, a) => {
-                if last {
+                if last && !self.is_top_level {
                     self.emit("return ");
                 }
                 self.expr(a);
@@ -293,16 +295,21 @@ impl<'a> Compiler<'a> {
                 self.emit(&params.join(","));
                 self.emit(") {\n");
 
-                // TODO: outers
-                let mut compiler = Compiler::new(self.out);
+                // Create a new compiler for the function body (not top-level)
+                let mut compiler = Compiler::new(self.out, false);
                 compiler.compile(params.clone(), outers.clone(), body);
-                self.emit("return null\n");
 
                 self.emit("}\n");
             }
             Stmt::Return(_src, a) => {
-                self.emit("return ");
-                self.expr(a);
+                if self.is_top_level {
+                    self.emit("exit(");
+                    self.expr(a);
+                    self.emit(")");
+                } else {
+                    self.emit("return ");
+                    self.expr(a);
+                }
                 self.emit(";\n");
             }
             Stmt::Throw(_src, a) => {
@@ -371,6 +378,6 @@ pub fn compile(ast: &Vec<Stmt>, file: &str) {
         }
     };
     emit(&mut out, PREFIX_JS_BYTES);
-    let mut compiler = Compiler::new(&mut out);
-    compiler.compile(Vec::<String>::new(), HashSet::<String>::new(), ast)
+    let mut compiler = Compiler::new(&mut out, true);
+    compiler.compile(Vec::<String>::new(), HashSet::<String>::new(), ast);
 }
