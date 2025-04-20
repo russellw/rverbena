@@ -2,7 +2,6 @@ use crate::ast::*;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fs;
-use std::path::Path;
 use std::process;
 
 #[derive(Clone, Hash, PartialEq, Eq, Debug)]
@@ -102,9 +101,6 @@ struct Parser {
 
     // Current token
     tok: Tok,
-
-    // Imports, not yet resolved
-    importing: Vec<String>,
 }
 
 fn is_id_start(c: char) -> bool {
@@ -226,7 +222,6 @@ impl Parser {
             pos: 0,
             line: 1,
             tok: Tok::Newline,
-            importing: Vec::new(),
         }
     }
 
@@ -883,14 +878,14 @@ impl Parser {
         Stmt::If(src, cond, yes, no)
     }
 
+    // TODO: This function could return a statement
     fn stmt(&mut self, v: &mut Vec<Stmt>) {
         let src = self.src();
         let r = match self.tok {
             Tok::Import => {
                 self.lex();
                 let name = self.id();
-                self.importing.push(name);
-                return;
+                Stmt::Import(src, name)
             }
             Tok::Func => {
                 self.lex();
@@ -1101,7 +1096,7 @@ impl Parser {
         }
     }
 
-    fn parse(&mut self) -> (Vec<String>, Vec<Stmt>) {
+    fn parse(&mut self) -> Vec<Stmt> {
         // Start the tokenizer
         self.lex();
         self.eat(Tok::Newline);
@@ -1115,11 +1110,11 @@ impl Parser {
             self.err("Unmatched terminator");
         }
 
-        (self.importing.clone(), v)
+        v
     }
 }
 
-fn parse1(file: &str) -> (Vec<String>, Vec<Stmt>) {
+pub fn parse(file: &str) -> Vec<Stmt> {
     let mut text = match fs::read_to_string(file) {
         Ok(a) => a,
         Err(e) => {
@@ -1135,31 +1130,4 @@ fn parse1(file: &str) -> (Vec<String>, Vec<Stmt>) {
     let text: Vec<char> = text.chars().collect();
     let mut parser = Parser::new(file.to_string(), text);
     parser.parse()
-}
-
-fn cat_unique(a: &mut Vec<String>, b: &Vec<String>) {
-    // This is efficient here because N is tiny
-    for s in b {
-        if !a.contains(s) {
-            a.push(s.clone());
-        }
-    }
-}
-
-pub fn parse(file: &str) -> Program {
-    let (mut importing, main) = parse1(file);
-    let dir = Path::new(file).parent().unwrap_or(Path::new(""));
-    let mut imports = Vec::<(String, Vec<Stmt>)>::new();
-    while !importing.is_empty() {
-        // This is efficient here because N is tiny
-        let name = importing.remove(0);
-        let file1 = dir
-            .join(format!("{}.va", name))
-            .to_string_lossy()
-            .into_owned();
-        let (importing1, v) = parse1(&file1);
-        cat_unique(&mut importing, &importing1);
-        imports.push((name, v));
-    }
-    Program { imports, main }
 }

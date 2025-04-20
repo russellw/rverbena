@@ -37,14 +37,10 @@ pub enum Stmt {
     For2(Src, String, String, Expr, Vec<Stmt>),
     Func(Src, String, Vec<String>, HashSet<String>, Vec<Stmt>),
     If(Src, Expr, Vec<Stmt>, Vec<Stmt>),
+    Import(Src, String),
     Label(Src, String),
     Return(Src, Expr),
     Throw(Src, Expr),
     Try(Src, Vec<Stmt>, String, Vec<Stmt>),
     While(Src, Expr, Vec<Stmt>),
-}
-
-pub struct Program {
-    pub imports: Vec<(String, Vec<Stmt>)>,
-    pub main: Vec<Stmt>,
 }

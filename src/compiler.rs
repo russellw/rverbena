@@ -111,7 +111,7 @@ impl<'a> Compiler<'a> {
                     self.decl_block(body);
                 }
             }
-            Stmt::Label(_, _) | Stmt::Func(_, _, _, _, _) => {}
+            Stmt::Label(_, _) | Stmt::Import(_, _) | Stmt::Func(_, _, _, _, _) => {}
         }
     }
 
@@ -216,6 +216,13 @@ impl<'a> Compiler<'a> {
 
     fn stmt(&mut self, a: &Stmt, last: bool) {
         match a {
+            Stmt::Import(_src, name) => {
+                self.emit("import ");
+                self.emit(name);
+                self.emit(" from './");
+                self.emit(name);
+                self.emit(".mjs'\n");
+            }
             Stmt::If(_src, cond, yes, no) => {
                 self.emit("if (");
                 self.expr(cond);
@@ -369,7 +376,7 @@ impl<'a> Compiler<'a> {
     }
 }
 
-pub fn compile(program: &Program, file: &str) {
+pub fn compile(ast: &Vec<Stmt>, file: &str) {
     let mut out = match File::create(file) {
         Ok(a) => a,
         Err(e) => {
@@ -379,9 +386,5 @@ pub fn compile(program: &Program, file: &str) {
     };
     emit(&mut out, PREFIX_JS_BYTES);
     let mut compiler = Compiler::new(&mut out, true);
-    compiler.compile(
-        Vec::<String>::new(),
-        HashSet::<String>::new(),
-        &program.main,
-    );
+    compiler.compile(Vec::<String>::new(), HashSet::<String>::new(), ast);
 }

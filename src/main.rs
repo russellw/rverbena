@@ -4,22 +4,25 @@ mod parser;
 use clap::{Arg, Command};
 use compiler::*;
 use parser::*;
+use std::path::Path;
 
 fn main() {
+    // Command line
     let matches = Command::new("Verbena")
         .version(env!("CARGO_PKG_VERSION"))
         .about("Verbena compiler")
         .arg(Arg::new("file").help("Source file").required(true).index(1))
-        .arg(
-            Arg::new("output")
-                .short('o')
-                .help("Output file")
-                .default_value("a.mjs")
-                .value_name("file"),
-        )
         .get_matches();
+
+    // Input
     let file = matches.get_one::<String>("file").unwrap();
-    let output = matches.get_one::<String>("output").unwrap();
-    let program = parse(file);
-    compile(&program, output);
+    let ast = parse(file);
+
+    // Output
+    let base_name = Path::new(file)
+        .file_stem()
+        .and_then(|os_str| os_str.to_str())
+        .unwrap_or("");
+    let output = format!("target/{}.mjs", base_name);
+    compile(&ast, &output);
 }
