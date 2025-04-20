@@ -9,29 +9,11 @@ const exit = process.exit
 
 import assert from "assert"
 
-function push(v, a) {
-	v.push(a)
-}
-
-function _norm(a) {
-	if (a === undefined) return null
-	return a
-}
-
-function _get(a, k) {
-	if (a instanceof Map) return _norm(a.get(k))
-	return a[k]
-}
-
-function _set(a, k, x) {
-	if (a instanceof Map) a.set(k, x)
-	else a[k] = x
-	return x
-}
-
-function len(a) {
-	if (a instanceof Map) return a.size
-	return a.length
+import * as core from '../src/core.mjs';
+for (const [key, value] of Object.entries(core)) {
+  if (typeof value === 'function') {
+    globalThis[key] = value;
+  }
 }
 
 function repr(a) {
