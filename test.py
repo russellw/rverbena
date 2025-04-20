@@ -74,7 +74,7 @@ def main():
         # Now run the compiled JavaScript with node
         try:
             proc = subprocess.Popen(
-                ["node", "a.mjs"],
+                ["node", f"target/{name}.mjs"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,  # This ensures string I/O instead of bytes
