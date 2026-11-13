@@ -1,4 +1,5 @@
 use crate::ast::*;
+use std::collections::BTreeSet;
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::Write;
@@ -18,7 +19,7 @@ fn emit(out: &mut File, b: &[u8]) {
 
 // Compiler is instantiated separately for each nested function
 struct Compiler<'a> {
-    assigned: HashSet<String>,
+    assigned: BTreeSet<String>,
     out: &'a mut File,
     is_top_level: bool,
 }
@@ -26,7 +27,7 @@ struct Compiler<'a> {
 impl<'a> Compiler<'a> {
     fn new(out: &'a mut File, is_top_level: bool) -> Self {
         Compiler {
-            assigned: HashSet::<String>::new(),
+            assigned: BTreeSet::<String>::new(),
             out,
             is_top_level,
         }
@@ -363,7 +364,7 @@ impl<'a> Compiler<'a> {
 
         // Declare variables
         self.decl_block(body);
-        for a in self.assigned.clone() {
+        for a in std::mem::take(&mut self.assigned) {
             if !(params.contains(&a) || outers.contains(&a)) {
                 self.emit("var ");
                 self.emit(&a);
